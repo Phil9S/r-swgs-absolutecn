@@ -17,5 +17,5 @@ depthtocn(x, purity, seqdepth)
 numeric vector
 }
 \description{
-converts readdepth to copy number given purity and single copy depth
+converts read depth to copy number given purity and single copy depth
 }

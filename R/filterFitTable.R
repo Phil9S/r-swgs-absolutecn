@@ -5,6 +5,7 @@
 #' @param filter_underpowered Boolean to filter underpowered fits
 #' @param filter_homozygous Boolean to filter based on homozygous loss
 #' @param af_cutoff Float for TP53 anchoring difference threshold
+#' @param homozygous_prop genomic homozygous loss proportion in Base pairs
 #' @param ranks Integer for number of top fits to return
 #'
 #' @returns data.frame
@@ -14,6 +15,7 @@ filterFitTable <- function(table = NULL,
                            filter_underpowered = NULL,
                            filter_homozygous = NULL,
                            af_cutoff = NULL,
+                           homozygous_prop = NULL,
                            ranks = 10) {
 
   if(is.null(table)){
@@ -25,6 +27,7 @@ filterFitTable <- function(table = NULL,
   }
 
   stopifnot(is.double(af_cutoff),af_cutoff > 0,af_cutoff < 1)
+  stopifnot(is.numeric(homozygous_prop))
   stopifnot(is.logical(filter_underpowered))
   stopifnot(is.logical(filter_homozygous))
   stopifnot(is.numeric(ranks),floor(ranks) == ranks,ranks > 1)
@@ -48,14 +51,18 @@ filterFitTable <- function(table = NULL,
   }
 
   # standard filtering
+  ## rank clonality within a unique ploidy state
+  ## select ploidy with the lowest clonality within a unique ploidy state
+  ## select top 10 ploidy states with the lowest clonality values
+  ## rank by clonality within a sample across ploidy in top 10
+  ## retain samples without TP53 mutations and where expected and observed TP53freq <=0.15
   filtered_results <- fitTable %>%
     dplyr::group_by(SAMPLE_ID, ploidy) %>%
-    dplyr::mutate(rank_clonality = dplyr::min_rank(clonality)) %>% #rank clonality within a unique ploidy state
-    dplyr::filter(rank_clonality == 1) %>% #select ploidy with the lowest clonality within a unique ploidy state
+    dplyr::mutate(rank_clonality = dplyr::min_rank(clonality)) %>%
+    dplyr::filter(rank_clonality == 1) %>%
     dplyr::group_by(SAMPLE_ID) %>%
-    dplyr::top_n(-ranks, wt = clonality) %>% # select top 10 ploidy states with the lowest clonality values
-    dplyr::mutate(rank_clonality = dplyr::min_rank(clonality)) %>% # rank by clonality within a sample across ploidy in top 10
-    # retain samples without TP53 mutations and where expected and observed TP53freq <=0.15
+    dplyr::top_n(-ranks, wt = clonality) %>%
+    dplyr::mutate(rank_clonality = dplyr::min_rank(clonality)) %>%
     dplyr::filter(is.na(TP53freq) |
                     dplyr::near(expected_TP53_AF, TP53freq, tol = af_cutoff)) %>%
     dplyr::arrange(PATIENT_ID, SAMPLE_ID)
@@ -63,7 +70,7 @@ filterFitTable <- function(table = NULL,
   pruned_results <- filtered_results %>%
     dplyr::arrange(SAMPLE_ID, ploidy) %>%
     dplyr::group_by(SAMPLE_ID) %>%
-    dplyr::mutate(pl_diff = abs(ploidy - dplyr::lag(ploidy))) %>% #, pu_diff = abs(purity - dplyr::lag(purity)) not used
+    dplyr::mutate(pl_diff = abs(ploidy - dplyr::lag(ploidy))) %>%
     dplyr::mutate(new_state_n = dplyr::row_number() == 1 |
                     pl_diff > 0.3) %>%
     dplyr::mutate(new_state = cumsum(new_state_n)) %>%

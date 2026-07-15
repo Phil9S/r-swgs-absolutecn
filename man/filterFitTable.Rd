@@ -10,6 +10,7 @@ filterFitTable(
   filter_underpowered = NULL,
   filter_homozygous = NULL,
   af_cutoff = NULL,
+  homozygous_prop = NULL,
   ranks = 10
 )
 }
@@ -23,6 +24,8 @@ filterFitTable(
 \item{filter_homozygous}{Boolean to filter based on homozygous loss}
 
 \item{af_cutoff}{Float for TP53 anchoring difference threshold}
+
+\item{homozygous_prop}{genomic homozygous loss proportion in Base pairs}
 
 \item{ranks}{Integer for number of top fits to return}
 }
