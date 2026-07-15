@@ -35,7 +35,16 @@ gridStats <- function(obj=NULL,ploidy=NULL,purity=NULL){
               errors=errors))
 }
 
-# converts readdepth to copy number given purity and single copy depth
+#' depthtocn
+#'
+#' converts readdepth to copy number given purity and single copy depth
+#'
+#' @param x numeric vector
+#' @param purity float
+#' @param seqdepth integer
+#'
+#' @returns numeric vector
+#' @export
 depthtocn <- function(x, purity, seqdepth){
   (x / seqdepth - 2 * (1 - purity)) / purity
 }

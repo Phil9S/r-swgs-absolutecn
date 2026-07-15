@@ -2,6 +2,7 @@
 
 export(bamCheck)
 export(collapseRDS)
+export(depthtocn)
 export(filterFitTable)
 export(getDownsampleDepth)
 export(getErrors)
