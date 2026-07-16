@@ -74,6 +74,7 @@ predictProfile <- function(qctable = NULL,
     qctable <- qctable %>%
       dplyr::mutate(!!!stats::setNames(rep(NA, length(newCols)), newCols))
   })
+
   qctable <- qctable %>%
     dplyr::ungroup() %>%
     dplyr::select(-c("sample")) %>%
@@ -85,9 +86,8 @@ predictProfile <- function(qctable = NULL,
         "|flagThreshold=",
         flagThreshold,
         "|ErrorMetric=",
-        errorMetric
-      )
-    )
+        errorMetric)) %>%
+    dplyr::mutate(use = as.logical(use))
 
   # tie break for edge cases
   ## For cases with multiple where ploidy is n + 2CN and twice the purity
@@ -100,7 +100,7 @@ predictProfile <- function(qctable = NULL,
     }
   }
 
-  if (all(!as.logical(qctable$use))) {
+  if(all(!as.logical(qctable$use))){
     qctable <- qctable %>%
       dplyr::ungroup() %>%
       tibble::add_row(
@@ -112,7 +112,7 @@ predictProfile <- function(qctable = NULL,
         segments = unique(.$segments),
         downsample_depth = 2756274,
         # default for pl=2,pu=1 @ 30kb
-        use = "TRUE"
+        use = TRUE
       ) %>%
       dplyr::mutate(flag = ifelse(is.na(flag), NA, paste0("NOFIT|", flag))) %>%
       dplyr::mutate(notes = paste0("NO_FIT_FOUND|", notes))
